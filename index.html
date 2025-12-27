@@ -4,370 +4,130 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Doc Portal Compare</title>
-  <link rel="icon" href="https://docs.reltio.com/favicon.ico" type="image/x-icon" />
+  <link rel="icon" href="https://docs.reltio.com/favicon.ico" />
   <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@300;400;600&display=swap" rel="stylesheet">
 
   <style>
-    :root{
-      --bg:#0b1220;
-      --panel:#101a33;
-      --card:#0f1730;
-      --text:#e7ecff;
-      --muted:#aab3d6;
-      --accent:#6ee7ff;
-      --border:rgba(255,255,255,.12);
-      --shadow: 0 12px 30px rgba(0,0,0,.35);
-      --radius:16px;
-    }
-    *{box-sizing:border-box}
-
-    /* NOTE: We keep parent scroll enabled to avoid weird behavior on some browsers.
-       Cookie consent inside cross-origin iframes is often blocked; "Set cookies" fixes it in top-level tabs. */
-
     body{
       margin:0;
       font-family:"Libre Franklin",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background: radial-gradient(1200px 800px at 20% 0%, #14234a 0%, var(--bg) 55%),
-                  radial-gradient(900px 700px at 90% 10%, #0c4a6e 0%, rgba(11,18,32,0) 55%);
-      color:var(--text);
+      background:#0b1220;
+      color:#e7ecff;
     }
-    .wrap{max-width:1400px;margin:0 auto;padding:20px}
-    header{
-      display:flex;gap:16px;align-items:center;justify-content:space-between;
-      padding:18px 18px;
-      background: rgba(16,26,51,.72);
-      border:1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
+    .wrap{max-width:900px;margin:0 auto;padding:40px}
+    h1{margin:0 0 6px;font-size:22px}
+    p{margin:0 0 24px;color:#aab3d6}
+    .card{
+      background:#101a33;
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:14px;
+      padding:24px;
     }
-    .title{display:flex;flex-direction:column;gap:4px}
-    .title h1{font-size:18px;margin:0;font-weight:600;letter-spacing:.2px}
-    .title p{margin:0;color:var(--muted);font-size:13px}
-    .controls{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
-    .pill{
-      display:flex;gap:8px;align-items:center;
-      padding:10px 12px;
-      background: rgba(15,23,48,.85);
-      border:1px solid var(--border);
-      border-radius: 12px;
+    input,select,button{
+      width:100%;
+      padding:12px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.12);
+      background:#0f1730;
+      color:#e7ecff;
+      font-size:14px;
     }
-    input[type="text"]{
-      width:min(520px, 70vw);
-      padding:10px 12px;
-      border-radius: 10px;
-      border:1px solid var(--border);
-      background: rgba(0,0,0,.2);
-      color:var(--text);
-      outline:none;
-    }
-    select, button{
-      padding:10px 12px;
-      border-radius: 10px;
-      border:1px solid var(--border);
-      background: rgba(0,0,0,.18);
-      color:var(--text);
+    button{
       cursor:pointer;
       font-weight:600;
-      white-space:nowrap;
+      background:linear-gradient(135deg,#6ee7ff33,#6ee7ff11);
+      border-color:#6ee7ff66;
     }
-    button:hover{border-color: rgba(110,231,255,.55)}
-    button.primary{
-      background: linear-gradient(135deg, rgba(110,231,255,.22), rgba(110,231,255,.06));
-      border-color: rgba(110,231,255,.45);
-    }
-    button.secondary{
-      background: rgba(255,255,255,.06);
-    }
-
-    .grid{
-      margin-top:16px;
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:12px;
-    }
-    .pane{
-      background: rgba(16,26,51,.55);
-      border:1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow:hidden;
-      min-height: calc(100vh - 160px);
-      display:flex;
-      flex-direction:column;
-    }
-    .paneHeader{
-      display:flex;align-items:center;justify-content:space-between;
-      padding:12px 12px;
-      background: rgba(15,23,48,.9);
-      border-bottom:1px solid var(--border);
-      gap:10px;
-    }
-    .badge{
-      font-size:12px;
-      color:var(--muted);
-      display:flex;align-items:center;gap:8px;
-      min-width:0;
-    }
-    .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);opacity:.9}
-    .url{
-      font-size:12px;color:var(--muted);
-      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-      max-width: 54ch;
-    }
-    iframe{
-      width:100%;
-      height:100%;
-      border:0;
-      background:#fff;
-      flex:1;
-    }
-    .footerNote{
-      margin-top:10px;
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.4;
-      opacity:.9;
-    }
-    .footerNote strong{color:var(--text)}
-    @media (max-width: 980px){
-      .grid{grid-template-columns:1fr}
-      .pane{min-height: 55vh}
-      input[type="text"]{width:100%}
-    }
+    button:hover{border-color:#6ee7ffaa}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+    .actions{margin-top:18px}
+    .hint{margin-top:14px;font-size:13px;color:#aab3d6}
   </style>
 </head>
 
 <body>
   <div class="wrap">
-    <header>
-      <div class="title">
-        <h1>Doc Portal Compare</h1>
-        <p>Paste a doc URL → compare any two environments side-by-side (same path).</p>
+    <h1>Doc Portal Compare</h1>
+    <p>Launch two documentation environments side by side (same path).</p>
+
+    <div class="card">
+      <input id="urlInput" placeholder="Paste full docs URL (prod / staging / uat)" />
+
+      <div class="row">
+        <select id="leftEnv"></select>
+        <select id="rightEnv"></select>
       </div>
 
-      <div class="controls">
-        <div class="pill">
-          <input id="urlInput" type="text" placeholder="Paste full URL (prod / staging / uat)..." />
-          <button class="primary" id="loadBtn">Load</button>
-        </div>
-
-        <div class="pill">
-          <label for="leftEnv" style="color:var(--muted);font-size:12px">Left</label>
-          <select id="leftEnv"></select>
-
-          <label for="rightEnv" style="color:var(--muted);font-size:12px">Right</label>
-          <select id="rightEnv"></select>
-
-          <button id="swapBtn" title="Swap sides">Swap</button>
-          <button id="copyLinkBtn" title="Copy a shareable link">Copy link</button>
-
-          <!-- ✅ new: set cookies in top-level tabs -->
-          <button class="secondary" id="cookiesBtn" title="Open both environments in tabs so you can accept/reject cookies">
-            Set cookies
-          </button>
-
-          <!-- existing -->
-          <button id="openTabsBtn" title="Open both in new tabs">Open tabs</button>
-
-          <!-- ✅ new: reload iframes after setting cookies -->
-          <button class="secondary" id="reloadBtn" title="Reload both panes">Reload</button>
-        </div>
+      <div class="actions">
+        <button id="compareBtn">Compare environments</button>
       </div>
-    </header>
 
-    <div class="grid">
-      <section class="pane">
-        <div class="paneHeader">
-          <div class="badge"><span class="dot"></span><strong id="leftLabel">Left</strong></div>
-          <div class="url" id="leftUrl">—</div>
-        </div>
-        <iframe id="leftFrame" title="Left environment"></iframe>
-      </section>
-
-      <section class="pane">
-        <div class="paneHeader">
-          <div class="badge"><span class="dot"></span><strong id="rightLabel">Right</strong></div>
-          <div class="url" id="rightUrl">—</div>
-        </div>
-        <iframe id="rightFrame" title="Right environment"></iframe>
-      </section>
-    </div>
-
-    <div class="footerNote" id="note">
-      If the cookie banner blocks clicks/scroll in a pane, use <strong>Set cookies</strong> once (accept/reject in the two tabs),
-      then return here and click <strong>Reload</strong>.
+      <div class="hint">
+        Opens two windows, perfectly sized for side-by-side comparison.  
+        Cookies, login, and scrolling work normally.
+      </div>
     </div>
   </div>
 
 <script>
-  // === Configure environments here ===
   const envMap = {
     PROD:   "https://docs.reltio.com/en",
     STAGING:"https://reltio-staging.portal.heretto.com/en",
-    UAT:    "https://reltio-preview.portal.heretto.com/en",
+    UAT:    "https://reltio-preview.portal.heretto.com/en"
   };
 
-  // Optional: additional bases that should be recognized as the same env
   const envPatterns = {
     PROD:   ["https://docs.reltio.com/en"],
-    STAGING:["https://reltio-staging.portal.heretto.com/en", "https://docstaging.reltio.com/en"],
-    UAT:    ["https://reltio-preview.portal.heretto.com/en"],
+    STAGING:["https://reltio-staging.portal.heretto.com/en","https://docstaging.reltio.com/en"],
+    UAT:    ["https://reltio-preview.portal.heretto.com/en"]
   };
 
-  // === UI elements ===
   const urlInput = document.getElementById("urlInput");
-  const loadBtn = document.getElementById("loadBtn");
   const leftEnv = document.getElementById("leftEnv");
   const rightEnv = document.getElementById("rightEnv");
-  const swapBtn = document.getElementById("swapBtn");
-  const copyLinkBtn = document.getElementById("copyLinkBtn");
-  const openTabsBtn = document.getElementById("openTabsBtn");
+  const compareBtn = document.getElementById("compareBtn");
 
-  // ✅ new buttons
-  const cookiesBtn = document.getElementById("cookiesBtn");
-  const reloadBtn = document.getElementById("reloadBtn");
+  Object.keys(envMap).forEach(env=>{
+    leftEnv.add(new Option(env,env));
+    rightEnv.add(new Option(env,env));
+  });
+  leftEnv.value="STAGING";
+  rightEnv.value="PROD";
 
-  const leftFrame = document.getElementById("leftFrame");
-  const rightFrame = document.getElementById("rightFrame");
-  const leftUrl = document.getElementById("leftUrl");
-  const rightUrl = document.getElementById("rightUrl");
-  const leftLabel = document.getElementById("leftLabel");
-  const rightLabel = document.getElementById("rightLabel");
-
-  function fillEnvSelect(selectEl) {
-    selectEl.innerHTML = "";
-    Object.keys(envMap).forEach(env => {
-      const opt = document.createElement("option");
-      opt.value = env;
-      opt.textContent = env;
-      selectEl.appendChild(opt);
-    });
-  }
-
-  fillEnvSelect(leftEnv);
-  fillEnvSelect(rightEnv);
-  leftEnv.value = "STAGING";
-  rightEnv.value = "PROD";
-
-  function detectEnvAndPath(inputUrl) {
-    const trimmed = (inputUrl || "").trim();
-    for (const [env, bases] of Object.entries(envPatterns)) {
-      for (const base of bases) {
-        if (trimmed.startsWith(base)) {
-          return { env, base, path: trimmed.slice(base.length) || "/" };
+  function detectPath(url){
+    for(const bases of Object.values(envPatterns)){
+      for(const base of bases){
+        if(url.startsWith(base)){
+          return url.slice(base.length) || "/";
         }
       }
     }
     return null;
   }
 
-  function buildUrl(env, path) {
-    const p = path.startsWith("/") ? path : "/" + path;
-    return envMap[env] + p;
+  function openSplit(leftUrl,rightUrl){
+    const w = Math.floor(screen.width * 0.98);
+    const h = Math.floor(screen.height * 0.92);
+    const half = Math.floor(w / 2);
+
+    window.open(leftUrl,"doc_left",
+      `width=${half},height=${h},left=0,top=0`);
+    window.open(rightUrl,"doc_right",
+      `width=${w-half},height=${h},left=${half},top=0`);
   }
 
-  function currentPath() {
-    return new URLSearchParams(location.search).get("path") || "/";
-  }
-
-  function setFrames(path) {
-    const lEnv = leftEnv.value;
-    const rEnv = rightEnv.value;
-
-    const l = buildUrl(lEnv, path);
-    const r = buildUrl(rEnv, path);
-
-    leftLabel.textContent = lEnv;
-    rightLabel.textContent = rEnv;
-
-    leftUrl.textContent = l;
-    rightUrl.textContent = r;
-
-    leftFrame.src = l;
-    rightFrame.src = r;
-
-    const qp = new URLSearchParams();
-    qp.set("path", path);
-    qp.set("left", lEnv);
-    qp.set("right", rEnv);
-    history.replaceState(null, "", "?" + qp.toString());
-  }
-
-  function loadFromInput() {
-    const parsed = detectEnvAndPath(urlInput.value);
-    if (!parsed) {
-      alert("URL doesn't match any known environment base. Add it to envPatterns if needed.");
+  compareBtn.onclick = ()=>{
+    const input = urlInput.value.trim();
+    const path = detectPath(input);
+    if(!path){
+      alert("URL does not match a known environment.");
       return;
     }
-    setFrames(parsed.path);
-  }
-
-  function reloadFrames() {
-    const path = currentPath();
-    setFrames(path);
-  }
-
-  loadBtn.addEventListener("click", loadFromInput);
-  urlInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") loadFromInput();
-  });
-
-  leftEnv.addEventListener("change", reloadFrames);
-  rightEnv.addEventListener("change", reloadFrames);
-
-  swapBtn.addEventListener("click", () => {
-    const a = leftEnv.value;
-    leftEnv.value = rightEnv.value;
-    rightEnv.value = a;
-    reloadFrames();
-  });
-
-  copyLinkBtn.addEventListener("click", async () => {
-    try {
-      await navigator.clipboard.writeText(location.href);
-      copyLinkBtn.textContent = "Copied!";
-      setTimeout(() => copyLinkBtn.textContent = "Copy link", 900);
-    } catch {
-      alert("Couldn't copy automatically. You can copy the URL from the address bar.");
-    }
-  });
-
-  openTabsBtn.addEventListener("click", () => {
-    const path = currentPath();
-    window.open(buildUrl(leftEnv.value, path), "_blank", "noopener,noreferrer");
-    window.open(buildUrl(rightEnv.value, path), "_blank", "noopener,noreferrer");
-  });
-
-  // ✅ New: open both envs in top-level tabs so cookie consent can be accepted/rejected reliably
-  cookiesBtn.addEventListener("click", () => {
-    const path = currentPath();
-    const l = buildUrl(leftEnv.value, path);
-    const r = buildUrl(rightEnv.value, path);
-
-    window.open(l, "_blank", "noopener,noreferrer");
-    window.open(r, "_blank", "noopener,noreferrer");
-
-    alert("Accept/Reject cookies in the two tabs, then return here and click Reload.");
-  });
-
-  // ✅ New: reload both panes after you set cookies
-  reloadBtn.addEventListener("click", reloadFrames);
-
-  (function initFromQuery() {
-    const qp = new URLSearchParams(location.search);
-    const path = qp.get("path");
-    const left = qp.get("left");
-    const right = qp.get("right");
-
-    if (left && envMap[left]) leftEnv.value = left;
-    if (right && envMap[right]) rightEnv.value = right;
-
-    if (path) {
-      setFrames(path);
-      urlInput.value = buildUrl(rightEnv.value, path);
-    }
-  })();
+    openSplit(
+      envMap[leftEnv.value]+path,
+      envMap[rightEnv.value]+path
+    );
+  };
 </script>
 </body>
 </html>
