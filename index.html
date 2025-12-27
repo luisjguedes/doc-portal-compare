@@ -21,11 +21,8 @@
     }
     *{box-sizing:border-box}
 
-    /* ✅ Key fix: prevent parent page from capturing scroll */
-    html, body{
-      height: 100%;
-      overflow: hidden;
-    }
+    /* NOTE: We keep parent scroll enabled to avoid weird behavior on some browsers.
+       Cookie consent inside cross-origin iframes is often blocked; "Set cookies" fixes it in top-level tabs. */
 
     body{
       margin:0;
@@ -44,14 +41,10 @@
       box-shadow: var(--shadow);
       backdrop-filter: blur(10px);
     }
-    .title{
-      display:flex;flex-direction:column;gap:4px
-    }
+    .title{display:flex;flex-direction:column;gap:4px}
     .title h1{font-size:18px;margin:0;font-weight:600;letter-spacing:.2px}
     .title p{margin:0;color:var(--muted);font-size:13px}
-    .controls{
-      display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end
-    }
+    .controls{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
     .pill{
       display:flex;gap:8px;align-items:center;
       padding:10px 12px;
@@ -76,12 +69,17 @@
       color:var(--text);
       cursor:pointer;
       font-weight:600;
+      white-space:nowrap;
     }
     button:hover{border-color: rgba(110,231,255,.55)}
     button.primary{
       background: linear-gradient(135deg, rgba(110,231,255,.22), rgba(110,231,255,.06));
       border-color: rgba(110,231,255,.45);
     }
+    button.secondary{
+      background: rgba(255,255,255,.06);
+    }
+
     .grid{
       margin-top:16px;
       display:grid;
@@ -94,10 +92,7 @@
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       overflow:hidden;
-
-      /* ✅ Key fix: fixed height so iframe is the scroll area */
-      height: calc(100vh - 160px);
-
+      min-height: calc(100vh - 160px);
       display:flex;
       flex-direction:column;
     }
@@ -120,18 +115,13 @@
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
       max-width: 54ch;
     }
-
-    /* ✅ Key fix: explicit scrolling and smooth iOS scroll */
     iframe{
       width:100%;
       height:100%;
       border:0;
       background:#fff;
       flex:1;
-      overflow:auto;
-      -webkit-overflow-scrolling: touch;
     }
-
     .footerNote{
       margin-top:10px;
       color:var(--muted);
@@ -139,9 +129,10 @@
       line-height:1.4;
       opacity:.9;
     }
+    .footerNote strong{color:var(--text)}
     @media (max-width: 980px){
       .grid{grid-template-columns:1fr}
-      .pane{height: 55vh}
+      .pane{min-height: 55vh}
       input[type="text"]{width:100%}
     }
   </style>
@@ -170,7 +161,17 @@
 
           <button id="swapBtn" title="Swap sides">Swap</button>
           <button id="copyLinkBtn" title="Copy a shareable link">Copy link</button>
+
+          <!-- ✅ new: set cookies in top-level tabs -->
+          <button class="secondary" id="cookiesBtn" title="Open both environments in tabs so you can accept/reject cookies">
+            Set cookies
+          </button>
+
+          <!-- existing -->
           <button id="openTabsBtn" title="Open both in new tabs">Open tabs</button>
+
+          <!-- ✅ new: reload iframes after setting cookies -->
+          <button class="secondary" id="reloadBtn" title="Reload both panes">Reload</button>
         </div>
       </div>
     </header>
@@ -181,8 +182,7 @@
           <div class="badge"><span class="dot"></span><strong id="leftLabel">Left</strong></div>
           <div class="url" id="leftUrl">—</div>
         </div>
-        <!-- ✅ scrolling + focus fixes -->
-        <iframe id="leftFrame" title="Left environment" scrolling="yes" tabindex="0"></iframe>
+        <iframe id="leftFrame" title="Left environment"></iframe>
       </section>
 
       <section class="pane">
@@ -190,13 +190,13 @@
           <div class="badge"><span class="dot"></span><strong id="rightLabel">Right</strong></div>
           <div class="url" id="rightUrl">—</div>
         </div>
-        <!-- ✅ scrolling + focus fixes -->
-        <iframe id="rightFrame" title="Right environment" scrolling="yes" tabindex="0"></iframe>
+        <iframe id="rightFrame" title="Right environment"></iframe>
       </section>
     </div>
 
     <div class="footerNote" id="note">
-      Tip: Click inside a pane to scroll it. If your portal blocks embedding (X-Frame-Options / CSP frame-ancestors), use “Open tabs”.
+      If the cookie banner blocks clicks/scroll in a pane, use <strong>Set cookies</strong> once (accept/reject in the two tabs),
+      then return here and click <strong>Reload</strong>.
     </div>
   </div>
 
@@ -223,6 +223,10 @@
   const swapBtn = document.getElementById("swapBtn");
   const copyLinkBtn = document.getElementById("copyLinkBtn");
   const openTabsBtn = document.getElementById("openTabsBtn");
+
+  // ✅ new buttons
+  const cookiesBtn = document.getElementById("cookiesBtn");
+  const reloadBtn = document.getElementById("reloadBtn");
 
   const leftFrame = document.getElementById("leftFrame");
   const rightFrame = document.getElementById("rightFrame");
@@ -263,6 +267,10 @@
     return envMap[env] + p;
   }
 
+  function currentPath() {
+    return new URLSearchParams(location.search).get("path") || "/";
+  }
+
   function setFrames(path) {
     const lEnv = leftEnv.value;
     const rEnv = rightEnv.value;
@@ -295,26 +303,24 @@
     setFrames(parsed.path);
   }
 
+  function reloadFrames() {
+    const path = currentPath();
+    setFrames(path);
+  }
+
   loadBtn.addEventListener("click", loadFromInput);
   urlInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") loadFromInput();
   });
 
-  leftEnv.addEventListener("change", () => {
-    const path = new URLSearchParams(location.search).get("path") || "/";
-    setFrames(path);
-  });
-  rightEnv.addEventListener("change", () => {
-    const path = new URLSearchParams(location.search).get("path") || "/";
-    setFrames(path);
-  });
+  leftEnv.addEventListener("change", reloadFrames);
+  rightEnv.addEventListener("change", reloadFrames);
 
   swapBtn.addEventListener("click", () => {
     const a = leftEnv.value;
     leftEnv.value = rightEnv.value;
     rightEnv.value = a;
-    const path = new URLSearchParams(location.search).get("path") || "/";
-    setFrames(path);
+    reloadFrames();
   });
 
   copyLinkBtn.addEventListener("click", async () => {
@@ -328,14 +334,25 @@
   });
 
   openTabsBtn.addEventListener("click", () => {
-    const path = new URLSearchParams(location.search).get("path") || "/";
+    const path = currentPath();
     window.open(buildUrl(leftEnv.value, path), "_blank", "noopener,noreferrer");
     window.open(buildUrl(rightEnv.value, path), "_blank", "noopener,noreferrer");
   });
 
-  // ✅ Key fix: focus the iframe when hovering it (helps wheel/trackpad + cookie modals)
-  leftFrame.addEventListener("mouseenter", () => leftFrame.focus());
-  rightFrame.addEventListener("mouseenter", () => rightFrame.focus());
+  // ✅ New: open both envs in top-level tabs so cookie consent can be accepted/rejected reliably
+  cookiesBtn.addEventListener("click", () => {
+    const path = currentPath();
+    const l = buildUrl(leftEnv.value, path);
+    const r = buildUrl(rightEnv.value, path);
+
+    window.open(l, "_blank", "noopener,noreferrer");
+    window.open(r, "_blank", "noopener,noreferrer");
+
+    alert("Accept/Reject cookies in the two tabs, then return here and click Reload.");
+  });
+
+  // ✅ New: reload both panes after you set cookies
+  reloadBtn.addEventListener("click", reloadFrames);
 
   (function initFromQuery() {
     const qp = new URLSearchParams(location.search);
