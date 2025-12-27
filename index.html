@@ -8,68 +8,138 @@
   <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@300;400;600&display=swap" rel="stylesheet">
 
   <style>
+    :root{
+      --bg:#0b1220;
+      --panel:#101a33;
+      --card:#0f1730;
+      --text:#e7ecff;
+      --muted:#aab3d6;
+      --accent:#6ee7ff;
+      --border:rgba(255,255,255,.12);
+      --shadow: 0 12px 30px rgba(0,0,0,.35);
+      --radius:16px;
+    }
     body{
       margin:0;
       font-family:"Libre Franklin",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background:#0b1220;
-      color:#e7ecff;
+      background: radial-gradient(1200px 800px at 20% 0%, #14234a 0%, var(--bg) 55%),
+                  radial-gradient(900px 700px at 90% 10%, #0c4a6e 0%, rgba(11,18,32,0) 55%);
+      color:var(--text);
     }
-    .wrap{max-width:900px;margin:0 auto;padding:40px}
-    h1{margin:0 0 6px;font-size:22px}
-    p{margin:0 0 24px;color:#aab3d6}
+    .wrap{max-width:980px;margin:0 auto;padding:36px 18px}
+    header{
+      display:flex;align-items:flex-start;justify-content:space-between;gap:16px;
+      background: rgba(16,26,51,.72);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:18px;
+      backdrop-filter: blur(10px);
+    }
+    .title h1{margin:0 0 6px;font-size:20px;font-weight:600;letter-spacing:.2px}
+    .title p{margin:0;color:var(--muted);font-size:13px;line-height:1.35}
     .card{
-      background:#101a33;
-      border:1px solid rgba(255,255,255,.12);
-      border-radius:14px;
-      padding:24px;
+      margin-top:14px;
+      background: rgba(16,26,51,.55);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:18px;
     }
-    input,select,button{
+    .row{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:12px;
+    }
+    .row2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    input, select, button{
       width:100%;
-      padding:12px;
-      border-radius:10px;
-      border:1px solid rgba(255,255,255,.12);
-      background:#0f1730;
-      color:#e7ecff;
+      padding:12px 12px;
+      border-radius: 12px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.18);
+      color:var(--text);
       font-size:14px;
+      outline:none;
     }
     button{
       cursor:pointer;
-      font-weight:600;
-      background:linear-gradient(135deg,#6ee7ff33,#6ee7ff11);
-      border-color:#6ee7ff66;
+      font-weight:700;
+      border-color: rgba(110,231,255,.45);
+      background: linear-gradient(135deg, rgba(110,231,255,.22), rgba(110,231,255,.06));
     }
-    button:hover{border-color:#6ee7ffaa}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
-    .actions{margin-top:18px}
-    .hint{margin-top:14px;font-size:13px;color:#aab3d6}
+    button:hover{border-color: rgba(110,231,255,.8)}
+    .btnRow{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    .mini{
+      margin-top:10px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.4;
+    }
+    .mini code{
+      color:var(--text);
+      background: rgba(0,0,0,.25);
+      padding:2px 6px;
+      border-radius: 8px;
+      border:1px solid rgba(255,255,255,.10);
+    }
+    .status{
+      margin-top:10px;
+      font-size:12px;
+      color: var(--muted);
+      min-height: 18px;
+    }
+    @media (max-width: 720px){
+      .row2, .btnRow{grid-template-columns: 1fr}
+      header{flex-direction:column}
+    }
   </style>
 </head>
 
 <body>
   <div class="wrap">
-    <h1>Doc Portal Compare</h1>
-    <p>Launch two documentation environments side by side (same path).</p>
+    <header>
+      <div class="title">
+        <h1>Doc Portal Compare</h1>
+        <p>
+          Paste a docs URL from any environment. Then launch two environments with the same path.
+          <br/>This uses real browser windows (no iframes), so cookies/login/scroll work normally.
+        </p>
+      </div>
+    </header>
 
     <div class="card">
-      <input id="urlInput" placeholder="Paste full docs URL (prod / staging / uat)" />
-
       <div class="row">
-        <select id="leftEnv"></select>
-        <select id="rightEnv"></select>
-      </div>
+        <input id="urlInput" placeholder="Paste full docs URL (PROD / STAGING / UAT)..." />
+        <div class="row2">
+          <select id="leftEnv" aria-label="Left environment"></select>
+          <select id="rightEnv" aria-label="Right environment"></select>
+        </div>
 
-      <div class="actions">
-        <button id="compareBtn">Compare environments</button>
-      </div>
+        <div class="btnRow">
+          <button id="compareBtn" title="Open two popup windows, positioned side-by-side">Compare (Side-by-side)</button>
+          <button id="openTabsBtn" title="Open both URLs in tabs (fallback)">Open in tabs</button>
+        </div>
 
-      <div class="hint">
-        Opens two windows, perfectly sized for side-by-side comparison.  
-        Cookies, login, and scrolling work normally.
+        <div class="mini">
+          If you see a single tab/window: your browser is blocking popups or ignoring window positioning.
+          Allow popups for <code>luisjguedes.github.io</code> for true side-by-side.
+        </div>
+        <div class="status" id="status"></div>
       </div>
     </div>
   </div>
 
 <script>
+  // === Configure environments here ===
   const envMap = {
     PROD:   "https://docs.reltio.com/en",
     STAGING:"https://reltio-staging.portal.heretto.com/en",
@@ -86,15 +156,23 @@
   const leftEnv = document.getElementById("leftEnv");
   const rightEnv = document.getElementById("rightEnv");
   const compareBtn = document.getElementById("compareBtn");
+  const openTabsBtn = document.getElementById("openTabsBtn");
+  const statusEl = document.getElementById("status");
 
+  function setStatus(msg){
+    statusEl.textContent = msg || "";
+  }
+
+  // Populate env dropdowns
   Object.keys(envMap).forEach(env=>{
-    leftEnv.add(new Option(env,env));
-    rightEnv.add(new Option(env,env));
+    leftEnv.add(new Option(env, env));
+    rightEnv.add(new Option(env, env));
   });
-  leftEnv.value="STAGING";
-  rightEnv.value="PROD";
+  leftEnv.value = "STAGING";
+  rightEnv.value = "PROD";
 
-  function detectPath(url){
+  function detectPath(inputUrl){
+    const url = (inputUrl || "").trim();
     for(const bases of Object.values(envPatterns)){
       for(const base of bases){
         if(url.startsWith(base)){
@@ -105,29 +183,108 @@
     return null;
   }
 
-  function openSplit(leftUrl,rightUrl){
-    const w = Math.floor(screen.width * 0.98);
-    const h = Math.floor(screen.height * 0.92);
-    const half = Math.floor(w / 2);
-
-    window.open(leftUrl,"doc_left",
-      `width=${half},height=${h},left=0,top=0`);
-    window.open(rightUrl,"doc_right",
-      `width=${w-half},height=${h},left=${half},top=0`);
+  function buildUrl(env, path){
+    const p = (path || "/").startsWith("/") ? (path || "/") : "/" + (path || "/");
+    return envMap[env] + p;
   }
 
-  compareBtn.onclick = ()=>{
+  // Stronger popup-based split view:
+  // - requests popup windows
+  // - then attempts moveTo/resizeTo for side-by-side positioning
+  function openSplit(leftUrl, rightUrl){
+    const w = Math.max(1000, Math.floor(screen.availWidth * 0.98));
+    const h = Math.max(700, Math.floor(screen.availHeight * 0.92));
+    const half = Math.floor(w / 2);
+
+    const common =
+      "popup=yes,noopener,noreferrer,toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes";
+
+    // Named windows so repeated compares reuse the same two windows (no clutter)
+    const leftWin = window.open(leftUrl, "doc_left", `${common},width=${half},height=${h}`);
+    const rightWin = window.open(rightUrl, "doc_right", `${common},width=${w-half},height=${h}`);
+
+    if(!leftWin || !rightWin){
+      setStatus("Pop-ups blocked. Allow pop-ups for luisjguedes.github.io, then try again.");
+      alert("Pop-ups blocked. Allow pop-ups for this site, then try again.");
+      return;
+    }
+
+    // Try to position/resize (some browsers restrict this)
+    try {
+      leftWin.moveTo(0, 0);
+      leftWin.resizeTo(half, h);
+
+      rightWin.moveTo(half, 0);
+      rightWin.resizeTo(w - half, h);
+
+      setStatus("Opened two windows. If they didn't align, use your OS window snap to place them side-by-side.");
+    } catch (e) {
+      setStatus("Opened windows. Your browser may restrict auto-positioning; use OS window snap to place them side-by-side.");
+    }
+  }
+
+  function openTabs(leftUrl, rightUrl){
+    window.open(leftUrl, "_blank", "noopener,noreferrer");
+    window.open(rightUrl, "_blank", "noopener,noreferrer");
+    setStatus("Opened both environments in tabs.");
+  }
+
+  function compare(){
     const input = urlInput.value.trim();
     const path = detectPath(input);
     if(!path){
-      alert("URL does not match a known environment.");
+      setStatus("URL does not match a known environment base.");
+      alert("URL doesn't match any known environment.");
       return;
     }
-    openSplit(
-      envMap[leftEnv.value]+path,
-      envMap[rightEnv.value]+path
-    );
-  };
+
+    const l = buildUrl(leftEnv.value, path);
+    const r = buildUrl(rightEnv.value, path);
+
+    // Update URL so you can share it
+    const qp = new URLSearchParams();
+    qp.set("path", path);
+    qp.set("left", leftEnv.value);
+    qp.set("right", rightEnv.value);
+    history.replaceState(null, "", "?" + qp.toString());
+
+    openSplit(l, r);
+  }
+
+  compareBtn.addEventListener("click", compare);
+
+  openTabsBtn.addEventListener("click", () => {
+    const input = urlInput.value.trim();
+    const path = detectPath(input);
+    if(!path){
+      setStatus("URL does not match a known environment base.");
+      alert("URL doesn't match any known environment.");
+      return;
+    }
+    openTabs(buildUrl(leftEnv.value, path), buildUrl(rightEnv.value, path));
+  });
+
+  // Support Enter key
+  urlInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") compare();
+  });
+
+  // Init from shareable query params
+  (function initFromQuery(){
+    const qp = new URLSearchParams(location.search);
+    const path = qp.get("path");
+    const left = qp.get("left");
+    const right = qp.get("right");
+
+    if(left && envMap[left]) leftEnv.value = left;
+    if(right && envMap[right]) rightEnv.value = right;
+
+    if(path){
+      // Populate input with a representative URL so it "feels" loaded
+      urlInput.value = buildUrl(rightEnv.value, path);
+      setStatus("Ready. Click Compare to open side-by-side.");
+    }
+  })();
 </script>
 </body>
 </html>
