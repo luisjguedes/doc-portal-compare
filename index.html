@@ -20,6 +20,13 @@
       --radius:16px;
     }
     *{box-sizing:border-box}
+
+    /* ✅ Key fix: prevent parent page from capturing scroll */
+    html, body{
+      height: 100%;
+      overflow: hidden;
+    }
+
     body{
       margin:0;
       font-family:"Libre Franklin",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
@@ -87,7 +94,10 @@
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       overflow:hidden;
-      min-height: calc(100vh - 160px);
+
+      /* ✅ Key fix: fixed height so iframe is the scroll area */
+      height: calc(100vh - 160px);
+
       display:flex;
       flex-direction:column;
     }
@@ -110,13 +120,18 @@
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
       max-width: 54ch;
     }
+
+    /* ✅ Key fix: explicit scrolling and smooth iOS scroll */
     iframe{
       width:100%;
       height:100%;
       border:0;
       background:#fff;
       flex:1;
+      overflow:auto;
+      -webkit-overflow-scrolling: touch;
     }
+
     .footerNote{
       margin-top:10px;
       color:var(--muted);
@@ -126,7 +141,7 @@
     }
     @media (max-width: 980px){
       .grid{grid-template-columns:1fr}
-      .pane{min-height: 55vh}
+      .pane{height: 55vh}
       input[type="text"]{width:100%}
     }
   </style>
@@ -166,7 +181,8 @@
           <div class="badge"><span class="dot"></span><strong id="leftLabel">Left</strong></div>
           <div class="url" id="leftUrl">—</div>
         </div>
-        <iframe id="leftFrame" title="Left environment"></iframe>
+        <!-- ✅ scrolling + focus fixes -->
+        <iframe id="leftFrame" title="Left environment" scrolling="yes" tabindex="0"></iframe>
       </section>
 
       <section class="pane">
@@ -174,13 +190,13 @@
           <div class="badge"><span class="dot"></span><strong id="rightLabel">Right</strong></div>
           <div class="url" id="rightUrl">—</div>
         </div>
-        <iframe id="rightFrame" title="Right environment"></iframe>
+        <!-- ✅ scrolling + focus fixes -->
+        <iframe id="rightFrame" title="Right environment" scrolling="yes" tabindex="0"></iframe>
       </section>
     </div>
 
     <div class="footerNote" id="note">
-      Tip: If your portal blocks embedding (X-Frame-Options / CSP frame-ancestors), the frames may stay blank.
-      In that case, use “Open tabs” — the URLs will still match paths correctly.
+      Tip: Click inside a pane to scroll it. If your portal blocks embedding (X-Frame-Options / CSP frame-ancestors), use “Open tabs”.
     </div>
   </div>
 
@@ -316,6 +332,10 @@
     window.open(buildUrl(leftEnv.value, path), "_blank", "noopener,noreferrer");
     window.open(buildUrl(rightEnv.value, path), "_blank", "noopener,noreferrer");
   });
+
+  // ✅ Key fix: focus the iframe when hovering it (helps wheel/trackpad + cookie modals)
+  leftFrame.addEventListener("mouseenter", () => leftFrame.focus());
+  rightFrame.addEventListener("mouseenter", () => rightFrame.focus());
 
   (function initFromQuery() {
     const qp = new URLSearchParams(location.search);
