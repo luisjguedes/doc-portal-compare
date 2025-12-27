@@ -121,30 +121,31 @@
 
     .hidden{display:none}
 
-    /* ===== DISCREET THEME TOGGLE ===== */
+    /* ===== ICON-ONLY THEME TOGGLE ===== */
     .theme-footer{
       position:fixed;
       bottom:10px;
       right:14px;
-      font-size:12px;
-      color:var(--muted);
-      opacity:.75;
+      font-size:14px;
+      opacity:.55;
       user-select:none;
     }
 
     .theme-footer span{
       cursor:pointer;
-      margin:0 2px;
+      margin-left:6px;
     }
 
     .theme-footer span.active{
-      color:var(--text);
-      font-weight:600;
       opacity:1;
     }
 
+    .theme-footer span:not(.active){
+      opacity:.4;
+    }
+
     .theme-footer span:hover{
-      text-decoration:underline;
+      opacity:1;
     }
   </style>
 </head>
@@ -190,10 +191,10 @@
   </div>
 </div>
 
-<!-- Discreet footer toggle -->
-<div class="theme-footer">
-  <span id="lightOpt">Light</span> ·
-  <span id="darkOpt">Dark</span>
+<!-- Icon-only theme toggle -->
+<div class="theme-footer" aria-label="Theme toggle">
+  <span id="lightOpt" title="Light mode">☀︎</span>
+  <span id="darkOpt" title="Dark mode">☾</span>
 </div>
 
 <script>
