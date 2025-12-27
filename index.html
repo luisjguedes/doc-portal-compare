@@ -231,9 +231,12 @@
     history.replaceState(null, "", "?" + qp.toString());
   }
 
-  // Open two named windows and try to position them side-by-side.
-  // Named windows means repeated compares reuse the same two windows (no clutter).
+  // ✅ Improved: more reliable auto-positioning across multi-monitor setups,
+  // plus a few retries (some browsers only allow move/resize after creation).
   function openSplit(leftUrl, rightUrl){
+    const availLeft = (typeof screen.availLeft === "number") ? screen.availLeft : 0;
+    const availTop  = (typeof screen.availTop === "number") ? screen.availTop : 0;
+
     const w = Math.max(1200, Math.floor(screen.availWidth * 0.98));
     const h = Math.max(700, Math.floor(screen.availHeight * 0.92));
     const half = Math.floor(w / 2);
@@ -241,8 +244,12 @@
     const common =
       "popup=yes,noopener,noreferrer,toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes";
 
-    const leftWin = window.open(leftUrl, "doc_left", `${common},width=${half},height=${h}`);
-    const rightWin = window.open(rightUrl, "doc_right", `${common},width=${w-half},height=${h}`);
+    // Ask for position in the features too (helps some browsers)
+    const leftFeatures  = `${common},width=${half},height=${h},left=${availLeft},top=${availTop}`;
+    const rightFeatures = `${common},width=${w-half},height=${h},left=${availLeft+half},top=${availTop}`;
+
+    const leftWin = window.open(leftUrl, "doc_left", leftFeatures);
+    const rightWin = window.open(rightUrl, "doc_right", rightFeatures);
 
     if(!leftWin || !rightWin){
       setStatus("Pop-ups blocked. Allow pop-ups for this site, then try again.");
@@ -255,16 +262,21 @@
     leftWinHandle = leftWin;
     rightWinHandle = rightWin;
 
-    // Try to position/resize (some browsers restrict auto-positioning)
-    try {
-      leftWin.moveTo(0, 0);
-      leftWin.resizeTo(half, h);
+    // Retry positioning a few times (browser may only allow after creation)
+    const tries = [0, 120, 350, 700];
+    tries.forEach((ms) => {
+      setTimeout(() => {
+        try {
+          leftWin.moveTo(availLeft, availTop);
+          leftWin.resizeTo(half, h);
+        } catch {}
 
-      rightWin.moveTo(half, 0);
-      rightWin.resizeTo(w - half, h);
-    } catch (e) {
-      // OS snapping still works
-    }
+        try {
+          rightWin.moveTo(availLeft + half, availTop);
+          rightWin.resizeTo(w - half, h);
+        } catch {}
+      }, ms);
+    });
 
     // Bring to front
     try { leftWin.focus(); } catch {}
@@ -352,7 +364,7 @@
     }
   });
 
-  // ✅ New: Bring compare windows to the front
+  // Bring compare windows to the front
   focusBtn.addEventListener("click", () => {
     let did = false;
     if(leftWinHandle && !leftWinHandle.closed){
@@ -365,7 +377,7 @@
     updateWindowButtons();
   });
 
-  // ✅ New: Close compare windows
+  // Close compare windows
   closeBtn.addEventListener("click", () => {
     let did = false;
     if(leftWinHandle && !leftWinHandle.closed){
