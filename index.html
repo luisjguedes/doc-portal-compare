@@ -8,53 +8,79 @@
   <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@300;400;600&display=swap" rel="stylesheet">
 
   <style>
+    /* ===== LIGHT MODE (DEFAULT) ===== */
     :root{
+      --bg:#f5f7fb;
+      --panel:#ffffff;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --accent:#2563eb;
+      --border:rgba(0,0,0,.12);
+      --shadow:0 12px 30px rgba(0,0,0,.15);
+      --radius:16px;
+    }
+
+    /* ===== DARK MODE ===== */
+    body.dark{
       --bg:#0b1220;
       --panel:#101a33;
       --text:#e7ecff;
       --muted:#aab3d6;
       --accent:#6ee7ff;
       --border:rgba(255,255,255,.12);
-      --shadow: 0 12px 30px rgba(0,0,0,.35);
-      --radius:16px;
+      --shadow:0 12px 30px rgba(0,0,0,.35);
     }
+
     *{box-sizing:border-box}
     body{
       margin:0;
       font-family:"Libre Franklin",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background: radial-gradient(1200px 800px at 20% 0%, #14234a 0%, var(--bg) 55%),
-                  radial-gradient(900px 700px at 90% 10%, #0c4a6e 0%, rgba(11,18,32,0) 55%);
+      background:var(--bg);
       color:var(--text);
     }
+
     .wrap{max-width:980px;margin:0 auto;padding:28px 18px}
 
     .banner{
       width:100%;
       height:110px;
       object-fit:cover;
-      border-radius: var(--radius);
+      border-radius:var(--radius);
       border:1px solid var(--border);
-      box-shadow: var(--shadow);
+      box-shadow:var(--shadow);
       margin-bottom:12px;
     }
 
     header{
-      background: rgba(16,26,51,.72);
+      background:var(--panel);
       border:1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
       padding:18px;
-      backdrop-filter: blur(10px);
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
     }
+
     h1{margin:0 0 6px;font-size:20px;font-weight:600}
     p{margin:0;color:var(--muted);font-size:13px}
 
+    .themeToggle{
+      padding:6px 10px;
+      border-radius:8px;
+      border:1px solid var(--border);
+      background:transparent;
+      cursor:pointer;
+      font-size:16px;
+    }
+
     .card{
       margin-top:14px;
-      background: rgba(16,26,51,.55);
+      background:var(--panel);
       border:1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
       padding:18px;
     }
 
@@ -64,31 +90,31 @@
       gap:10px;
       margin-bottom:12px;
     }
+
     .modeBtn{
       padding:12px;
-      border-radius: 12px;
+      border-radius:12px;
       border:1px solid var(--border);
-      background: rgba(0,0,0,.18);
-      color:var(--text);
+      background:transparent;
       cursor:pointer;
       font-weight:800;
       text-align:center;
-      user-select:none;
     }
+
     .modeBtn.active{
-      border-color: rgba(110,231,255,.75);
-      background: linear-gradient(135deg, rgba(110,231,255,.22), rgba(110,231,255,.06));
+      border-color:var(--accent);
+      background:rgba(37,99,235,.08);
     }
 
     .row{display:grid;gap:12px}
     .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 
-    input, select, button{
+    input,select,button{
       width:100%;
       padding:12px;
-      border-radius: 12px;
+      border-radius:12px;
       border:1px solid var(--border);
-      background: rgba(0,0,0,.18);
+      background:transparent;
       color:var(--text);
       font-size:14px;
     }
@@ -96,14 +122,13 @@
     button.primary{
       font-weight:900;
       cursor:pointer;
-      border-color: rgba(110,231,255,.55);
-      background: linear-gradient(135deg, rgba(110,231,255,.22), rgba(110,231,255,.06));
+      border-color:var(--accent);
+      background:rgba(37,99,235,.12);
     }
 
     .hint{
       font-size:12px;
       color:var(--muted);
-      line-height:1.45;
     }
 
     .hidden{display:none}
@@ -113,17 +138,18 @@
 <body>
 <div class="wrap">
 
-  <!-- Banner -->
   <img src="reltio_doc_banner.png" alt="Reltio Documentation banner" class="banner" />
 
   <header>
-    <h1>Doc Portal Launcher</h1>
-    <p>Paste a docs URL, then either check one environment or compare two side-by-side.</p>
+    <div>
+      <h1>Doc Portal Launcher</h1>
+      <p>Paste a docs URL, then check one environment or compare two side-by-side.</p>
+    </div>
+    <button id="themeToggle" class="themeToggle" title="Toggle light / dark mode">☀️</button>
   </header>
 
   <div class="card">
 
-    <!-- MODE SWITCH -->
     <div class="modeRow">
       <div id="modeCheck" class="modeBtn active">Check an environment</div>
       <div id="modeCompare" class="modeBtn">Compare environments</div>
@@ -132,12 +158,10 @@
     <div class="row">
       <input id="urlInput" placeholder="Paste full docs URL (PROD / STAGING / UAT)" />
 
-      <!-- Check -->
       <div id="checkUI">
         <select id="checkEnv"></select>
       </div>
 
-      <!-- Compare -->
       <div id="compareUI" class="row2 hidden">
         <select id="leftEnv"></select>
         <select id="rightEnv"></select>
@@ -145,47 +169,55 @@
 
       <button id="goBtn" class="primary">Open</button>
 
-      <div class="hint" id="hintCheck">
+      <div id="hintCheck" class="hint">
         Opens a single reusable pop-up for the selected environment.
       </div>
-      <div class="hint hidden" id="hintCompare">
+      <div id="hintCompare" class="hint hidden">
         Opens two reusable pop-ups side-by-side. Allow pop-ups for this site.
       </div>
     </div>
-
   </div>
 </div>
 
 <script>
-  const envMap = {
+  /* ===== THEME TOGGLE ===== */
+  const toggle=document.getElementById("themeToggle");
+  const saved=localStorage.getItem("theme");
+  if(saved==="dark"){
+    document.body.classList.add("dark");
+    toggle.textContent="🌙";
+  }
+  toggle.onclick=()=>{
+    const dark=document.body.classList.toggle("dark");
+    toggle.textContent=dark?"🌙":"☀️";
+    localStorage.setItem("theme",dark?"dark":"light");
+  };
+
+  /* ===== ENV LOGIC ===== */
+  const envMap={
     PROD:"https://docs.reltio.com/en",
     STAGING:"https://reltio-staging.portal.heretto.com/en",
     UAT:"https://reltio-preview.portal.heretto.com/en"
   };
 
-  const envPatterns = Object.values(envMap);
+  const modeCheck=document.getElementById("modeCheck");
+  const modeCompare=document.getElementById("modeCompare");
+  const checkUI=document.getElementById("checkUI");
+  const compareUI=document.getElementById("compareUI");
+  const hintCheck=document.getElementById("hintCheck");
+  const hintCompare=document.getElementById("hintCompare");
+  const urlInput=document.getElementById("urlInput");
+  const checkEnv=document.getElementById("checkEnv");
+  const leftEnv=document.getElementById("leftEnv");
+  const rightEnv=document.getElementById("rightEnv");
 
-  const modeCheck = document.getElementById("modeCheck");
-  const modeCompare = document.getElementById("modeCompare");
-  const checkUI = document.getElementById("checkUI");
-  const compareUI = document.getElementById("compareUI");
-  const hintCheck = document.getElementById("hintCheck");
-  const hintCompare = document.getElementById("hintCompare");
-  const goBtn = document.getElementById("goBtn");
-
-  const urlInput = document.getElementById("urlInput");
-  const checkEnv = document.getElementById("checkEnv");
-  const leftEnv = document.getElementById("leftEnv");
-  const rightEnv = document.getElementById("rightEnv");
-
-  let mode = "check";
+  let mode="check";
 
   function fill(sel){
-    sel.innerHTML="";
     Object.keys(envMap).forEach(e=>sel.add(new Option(e,e)));
   }
-  fill(checkEnv); fill(leftEnv); fill(rightEnv);
-  checkEnv.value="PROD"; leftEnv.value="STAGING"; rightEnv.value="PROD";
+  fill(checkEnv);fill(leftEnv);fill(rightEnv);
+  checkEnv.value="PROD";leftEnv.value="STAGING";rightEnv.value="PROD";
 
   function setMode(m){
     mode=m;
@@ -201,12 +233,12 @@
   modeCompare.onclick=()=>setMode("compare");
 
   function detectPath(u){
-    for(const base of envPatterns)
+    for(const base of Object.values(envMap))
       if(u.startsWith(base)) return u.slice(base.length)||"/";
     return null;
   }
 
-  function openPopup(url,name,left){
+  function popup(url,name,left){
     const w=Math.floor(screen.availWidth/2);
     const h=Math.floor(screen.availHeight*0.9);
     window.open(
@@ -216,15 +248,14 @@
     );
   }
 
-  goBtn.onclick=()=>{
+  document.getElementById("goBtn").onclick=()=>{
     const path=detectPath(urlInput.value.trim());
     if(!path){alert("Paste a valid docs URL");return;}
-
     if(mode==="check"){
-      openPopup(envMap[checkEnv.value]+path,"doc_left",0);
+      popup(envMap[checkEnv.value]+path,"doc_left",0);
     }else{
-      openPopup(envMap[leftEnv.value]+path,"doc_left",0);
-      openPopup(envMap[rightEnv.value]+path,"doc_right",Math.floor(screen.availWidth/2));
+      popup(envMap[leftEnv.value]+path,"doc_left",0);
+      popup(envMap[rightEnv.value]+path,"doc_right",Math.floor(screen.availWidth/2));
     }
   };
 </script>
