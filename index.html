@@ -55,15 +55,16 @@
     }
     .modeBtn{
       flex:1;
-      min-width: 220px;
+      min-width: 240px;
       padding:12px 12px;
       border-radius: 12px;
       border:1px solid var(--border);
       background: rgba(0,0,0,.18);
       color:var(--text);
       cursor:pointer;
-      font-weight:700;
+      font-weight:800;
       text-align:center;
+      user-select:none;
     }
     .modeBtn.active{
       border-color: rgba(110,231,255,.75);
@@ -85,7 +86,7 @@
     }
     button.primary{
       cursor:pointer;
-      font-weight:800;
+      font-weight:900;
       border-color: rgba(110,231,255,.55);
       background: linear-gradient(135deg, rgba(110,231,255,.22), rgba(110,231,255,.06));
     }
@@ -122,13 +123,13 @@
   <div class="wrap">
     <header>
       <h1>Doc Portal Launcher</h1>
-      <p>Choose what you want to do: compare two environments side-by-side, or open a single environment (same path).</p>
+      <p>Paste a docs URL, then either compare two environments side-by-side or quickly check one environment in the left window.</p>
     </header>
 
     <div class="card">
       <div class="modeRow">
         <div id="modeCompare" class="modeBtn active" role="button" tabindex="0">Compare environments</div>
-        <div id="modeOpen" class="modeBtn" role="button" tabindex="0">Open a specific environment</div>
+        <div id="modeCheck" class="modeBtn" role="button" tabindex="0">Check an environment (left)</div>
       </div>
 
       <div class="row">
@@ -140,19 +141,19 @@
           <select id="rightEnv" aria-label="Right environment"></select>
         </div>
 
-        <!-- Open single UI -->
-        <div id="openUI" class="row2 hidden">
-          <select id="singleEnv" aria-label="Environment to open"></select>
+        <!-- Check-left UI -->
+        <div id="checkUI" class="row2 hidden">
+          <select id="checkEnv" aria-label="Environment to open on the left"></select>
           <div></div>
         </div>
 
-        <button id="goBtn" class="primary">Go</button>
+        <button id="goBtn" class="primary">Compare</button>
 
         <div class="hint" id="hintCompare">
           Compare opens two reusable pop-up windows side-by-side. Allow pop-ups for <code>luisjguedes.github.io</code> (one-time).
         </div>
-        <div class="hint hidden" id="hintOpen">
-          Open mode launches a single window/tab in the environment you choose.
+        <div class="hint hidden" id="hintCheck">
+          Check mode opens a single reusable pop-up on the <strong>left side</strong>. It uses the same path as the URL you pasted.
         </div>
 
         <div class="status" id="status"></div>
@@ -176,46 +177,46 @@
 
   // === Elements ===
   const modeCompare = document.getElementById("modeCompare");
-  const modeOpen = document.getElementById("modeOpen");
+  const modeCheck = document.getElementById("modeCheck");
 
   const urlInput = document.getElementById("urlInput");
   const compareUI = document.getElementById("compareUI");
-  const openUI = document.getElementById("openUI");
+  const checkUI = document.getElementById("checkUI");
 
   const leftEnv = document.getElementById("leftEnv");
   const rightEnv = document.getElementById("rightEnv");
-  const singleEnv = document.getElementById("singleEnv");
+  const checkEnv = document.getElementById("checkEnv");
 
   const goBtn = document.getElementById("goBtn");
   const hintCompare = document.getElementById("hintCompare");
-  const hintOpen = document.getElementById("hintOpen");
+  const hintCheck = document.getElementById("hintCheck");
   const statusEl = document.getElementById("status");
 
   function setStatus(msg){ statusEl.textContent = msg || ""; }
 
   // === Mode state ===
-  let mode = "compare"; // "compare" | "open"
+  let mode = "compare"; // "compare" | "check"
 
   function setMode(nextMode){
     mode = nextMode;
 
     modeCompare.classList.toggle("active", mode === "compare");
-    modeOpen.classList.toggle("active", mode === "open");
+    modeCheck.classList.toggle("active", mode === "check");
 
     compareUI.classList.toggle("hidden", mode !== "compare");
-    openUI.classList.toggle("hidden", mode !== "open");
+    checkUI.classList.toggle("hidden", mode !== "check");
 
     hintCompare.classList.toggle("hidden", mode !== "compare");
-    hintOpen.classList.toggle("hidden", mode !== "open");
+    hintCheck.classList.toggle("hidden", mode !== "check");
 
-    goBtn.textContent = (mode === "compare") ? "Compare" : "Open";
+    goBtn.textContent = (mode === "compare") ? "Compare" : "Open on left";
     setStatus("");
   }
 
   modeCompare.addEventListener("click", () => setMode("compare"));
-  modeOpen.addEventListener("click", () => setMode("open"));
+  modeCheck.addEventListener("click", () => setMode("check"));
   modeCompare.addEventListener("keydown", (e)=>{ if(e.key==="Enter") setMode("compare"); });
-  modeOpen.addEventListener("keydown", (e)=>{ if(e.key==="Enter") setMode("open"); });
+  modeCheck.addEventListener("keydown", (e)=>{ if(e.key==="Enter") setMode("check"); });
 
   // Populate env dropdowns
   function fillSelect(sel){
@@ -224,11 +225,11 @@
   }
   fillSelect(leftEnv);
   fillSelect(rightEnv);
-  fillSelect(singleEnv);
+  fillSelect(checkEnv);
 
   leftEnv.value = "STAGING";
   rightEnv.value = "PROD";
-  singleEnv.value = "PROD";
+  checkEnv.value = "PROD";
 
   function detectPath(inputUrl){
     const url = (inputUrl || "").trim();
@@ -247,13 +248,37 @@
     return envMap[env] + p;
   }
 
-  function openSplit(leftUrl, rightUrl){
+  function getPathOrAlert(){
+    const input = urlInput.value.trim();
+    const path = detectPath(input);
+    if(!path){
+      alert("Paste a URL from PROD/STAGING/UAT first (or add more bases to envPatterns).");
+      return null;
+    }
+    return path;
+  }
+
+  function persist(mode, path){
+    const qp = new URLSearchParams();
+    qp.set("mode", mode);
+    qp.set("path", path);
+    qp.set("left", leftEnv.value);
+    qp.set("right", rightEnv.value);
+    qp.set("check", checkEnv.value);
+    history.replaceState(null, "", "?" + qp.toString());
+  }
+
+  function popupGeometry(){
     const availLeft = (typeof screen.availLeft === "number") ? screen.availLeft : 0;
     const availTop  = (typeof screen.availTop === "number") ? screen.availTop : 0;
-
     const w = Math.max(1200, Math.floor(screen.availWidth * 0.98));
     const h = Math.max(700, Math.floor(screen.availHeight * 0.92));
     const half = Math.floor(w / 2);
+    return { availLeft, availTop, w, h, half };
+  }
+
+  function openSplit(leftUrl, rightUrl){
+    const { availLeft, availTop, w, h, half } = popupGeometry();
 
     const common =
       "popup=yes,noopener,noreferrer,toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes";
@@ -283,30 +308,30 @@
     return true;
   }
 
-  function openSingle(url){
-    window.open(url, "doc_single", "noopener,noreferrer");
-    setStatus("Opened in the selected environment.");
-  }
+  function openLeftOnly(url){
+    const { availLeft, availTop, h, half } = popupGeometry();
 
-  function getPathOrAlert(){
-    const input = urlInput.value.trim();
-    const path = detectPath(input);
+    const common =
+      "popup=yes,noopener,noreferrer,toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes";
+    const features = `${common},width=${half},height=${h},left=${availLeft},top=${availTop}`;
 
-    if(!path){
-      alert("Paste a URL from PROD/STAGING/UAT first (or add more bases to envPatterns).");
-      return null;
+    const win = window.open(url, "doc_left", features);
+    if(!win){
+      setStatus("Pop-up blocked. Allow pop-ups for this site, then try again.");
+      alert("Pop-ups blocked. Allow pop-ups for luisjguedes.github.io, then click Open again.");
+      return false;
     }
-    return path;
-  }
 
-  function persist(mode, path){
-    const qp = new URLSearchParams();
-    qp.set("mode", mode);
-    qp.set("path", path);
-    qp.set("left", leftEnv.value);
-    qp.set("right", rightEnv.value);
-    qp.set("env", singleEnv.value);
-    history.replaceState(null, "", "?" + qp.toString());
+    // Retry position
+    const tries = [0, 120, 350, 700];
+    tries.forEach((ms) => {
+      setTimeout(() => {
+        try { win.moveTo(availLeft, availTop); win.resizeTo(half, h); } catch {}
+      }, ms);
+    });
+
+    setStatus(`Opened/updated left window (doc_left) in ${checkEnv.value}.`);
+    return true;
   }
 
   goBtn.addEventListener("click", () => {
@@ -317,8 +342,8 @@
       persist("compare", path);
       openSplit(buildUrl(leftEnv.value, path), buildUrl(rightEnv.value, path));
     } else {
-      persist("open", path);
-      openSingle(buildUrl(singleEnv.value, path));
+      persist("check", path);
+      openLeftOnly(buildUrl(checkEnv.value, path));
     }
   });
 
@@ -333,20 +358,19 @@
     const path = qp.get("path");
     const l = qp.get("left");
     const r = qp.get("right");
-    const env = qp.get("env");
+    const c = qp.get("check");
 
     if(l && envMap[l]) leftEnv.value = l;
     if(r && envMap[r]) rightEnv.value = r;
-    if(env && envMap[env]) singleEnv.value = env;
+    if(c && envMap[c]) checkEnv.value = c;
 
-    if(m === "open") setMode("open");
+    if(m === "check") setMode("check");
     else setMode("compare");
 
     if(path){
-      // Put a representative URL into the input so it feels "loaded"
-      const exampleEnv = (m === "open") ? (singleEnv.value || "PROD") : (rightEnv.value || "PROD");
+      const exampleEnv = (m === "check") ? (checkEnv.value || "PROD") : (rightEnv.value || "PROD");
       urlInput.value = buildUrl(exampleEnv, path);
-      setStatus("Ready. Click Go.");
+      setStatus("Ready. Click the button to launch.");
     }
   })();
 </script>
