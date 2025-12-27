@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Doc Portal Compare</title>
+  <title>Doc Portal Launcher</title>
   <link rel="icon" href="https://docs.reltio.com/favicon.ico" />
   <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@300;400;600&display=swap" rel="stylesheet">
 
@@ -26,9 +26,8 @@
                   radial-gradient(900px 700px at 90% 10%, #0c4a6e 0%, rgba(11,18,32,0) 55%);
       color:var(--text);
     }
-    .wrap{max-width:1100px;margin:0 auto;padding:28px 18px}
+    .wrap{max-width:980px;margin:0 auto;padding:28px 18px}
     header{
-      display:flex;align-items:flex-start;justify-content:space-between;gap:16px;
       background: rgba(16,26,51,.72);
       border:1px solid var(--border);
       border-radius: var(--radius);
@@ -36,8 +35,8 @@
       padding:18px;
       backdrop-filter: blur(10px);
     }
-    .title h1{margin:0 0 6px;font-size:20px;font-weight:600;letter-spacing:.2px}
-    .title p{margin:0;color:var(--muted);font-size:13px;line-height:1.35}
+    h1{margin:0 0 6px;font-size:20px;font-weight:600;letter-spacing:.2px}
+    p{margin:0;color:var(--muted);font-size:13px;line-height:1.35}
 
     .card{
       margin-top:14px;
@@ -47,10 +46,32 @@
       box-shadow: var(--shadow);
       padding:18px;
     }
-    .row{display:grid;grid-template-columns: 1fr;gap:12px}
-    .row2{display:grid;grid-template-columns: 1fr 1fr;gap:12px}
-    .row3{display:grid;grid-template-columns: 1fr 1fr 1fr;gap:12px}
-    .row4{display:grid;grid-template-columns: 1fr 1fr 1fr 1fr;gap:12px}
+
+    .modeRow{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+    .modeBtn{
+      flex:1;
+      min-width: 220px;
+      padding:12px 12px;
+      border-radius: 12px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.18);
+      color:var(--text);
+      cursor:pointer;
+      font-weight:700;
+      text-align:center;
+    }
+    .modeBtn.active{
+      border-color: rgba(110,231,255,.75);
+      background: linear-gradient(135deg, rgba(110,231,255,.22), rgba(110,231,255,.06));
+    }
+
+    .row{display:grid;grid-template-columns:1fr;gap:12px}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 
     input, select, button{
       width:100%;
@@ -62,36 +83,20 @@
       font-size:14px;
       outline:none;
     }
-    button{
+    button.primary{
       cursor:pointer;
-      font-weight:700;
-      border-color: rgba(110,231,255,.45);
+      font-weight:800;
+      border-color: rgba(110,231,255,.55);
       background: linear-gradient(135deg, rgba(110,231,255,.22), rgba(110,231,255,.06));
     }
-    button:hover{border-color: rgba(110,231,255,.85)}
-    button.secondary{
-      font-weight:600;
-      border-color: rgba(255,255,255,.16);
-      background: rgba(255,255,255,.06);
-    }
-    button.danger{
-      font-weight:700;
-      border-color: rgba(255,120,120,.35);
-      background: rgba(255,120,120,.10);
-    }
-    button.danger:hover{border-color: rgba(255,120,120,.6)}
-    button:disabled{
-      opacity:.5;
-      cursor:not-allowed;
-    }
-
-    .mini{
+    button.primary:hover{border-color: rgba(110,231,255,.9)}
+    .hint{
       margin-top:10px;
       color:var(--muted);
       font-size:12px;
       line-height:1.45;
     }
-    .mini code{
+    .hint code{
       color:var(--text);
       background: rgba(0,0,0,.25);
       padding:2px 6px;
@@ -104,9 +109,11 @@
       color: var(--muted);
       min-height: 18px;
     }
-    @media (max-width: 980px){
-      .row2,.row3,.row4{grid-template-columns:1fr}
-      header{flex-direction:column}
+
+    .hidden{display:none !important}
+
+    @media (max-width: 820px){
+      .row2{grid-template-columns:1fr}
     }
   </style>
 </head>
@@ -114,37 +121,38 @@
 <body>
   <div class="wrap">
     <header>
-      <div class="title">
-        <h1>Doc Portal Compare</h1>
-        <p>Paste a docs URL, pick two environments, then open them side-by-side in two reusable windows.</p>
-      </div>
+      <h1>Doc Portal Launcher</h1>
+      <p>Choose what you want to do: compare two environments side-by-side, or open a single environment (same path).</p>
     </header>
 
     <div class="card">
+      <div class="modeRow">
+        <div id="modeCompare" class="modeBtn active" role="button" tabindex="0">Compare environments</div>
+        <div id="modeOpen" class="modeBtn" role="button" tabindex="0">Open a specific environment</div>
+      </div>
+
       <div class="row">
         <input id="urlInput" placeholder="Paste full docs URL (PROD / STAGING / UAT)..." />
 
-        <div class="row2">
+        <!-- Compare UI -->
+        <div id="compareUI" class="row2">
           <select id="leftEnv" aria-label="Left environment"></select>
           <select id="rightEnv" aria-label="Right environment"></select>
         </div>
 
-        <div class="row3">
-          <button id="compareBtn" title="Opens/updates two reusable windows side-by-side">Compare</button>
-          <button class="secondary" id="swapBtn" title="Swap environments">Swap</button>
-          <button class="secondary" id="copyBtn" title="Copy both URLs">Copy URLs</button>
+        <!-- Open single UI -->
+        <div id="openUI" class="row2 hidden">
+          <select id="singleEnv" aria-label="Environment to open"></select>
+          <div></div>
         </div>
 
-        <div class="row4">
-          <button class="secondary" id="openTabsBtn" title="Fallback: open in tabs">Open in tabs</button>
-          <button class="secondary" id="copyLinkBtn" title="Copy shareable compare link">Copy compare link</button>
-          <button class="secondary" id="focusBtn" title="Bring compare windows to the front">Bring windows to front</button>
-          <button class="danger" id="closeBtn" title="Close compare windows">Close windows</button>
-        </div>
+        <button id="goBtn" class="primary">Go</button>
 
-        <div class="mini">
-          For true side-by-side, allow pop-ups for <code>luisjguedes.github.io</code> (one-time).
-          Tip: Use OS window snapping (Win+←/→ or macOS Tile Windows) for perfect alignment if your browser restricts positioning.
+        <div class="hint" id="hintCompare">
+          Compare opens two reusable pop-up windows side-by-side. Allow pop-ups for <code>luisjguedes.github.io</code> (one-time).
+        </div>
+        <div class="hint hidden" id="hintOpen">
+          Open mode launches a single window/tab in the environment you choose.
         </div>
 
         <div class="status" id="status"></div>
@@ -166,41 +174,61 @@
     UAT:    ["https://reltio-preview.portal.heretto.com/en"]
   };
 
+  // === Elements ===
+  const modeCompare = document.getElementById("modeCompare");
+  const modeOpen = document.getElementById("modeOpen");
+
   const urlInput = document.getElementById("urlInput");
+  const compareUI = document.getElementById("compareUI");
+  const openUI = document.getElementById("openUI");
+
   const leftEnv = document.getElementById("leftEnv");
   const rightEnv = document.getElementById("rightEnv");
-  const compareBtn = document.getElementById("compareBtn");
-  const openTabsBtn = document.getElementById("openTabsBtn");
-  const swapBtn = document.getElementById("swapBtn");
-  const copyBtn = document.getElementById("copyBtn");
-  const copyLinkBtn = document.getElementById("copyLinkBtn");
-  const focusBtn = document.getElementById("focusBtn");
-  const closeBtn = document.getElementById("closeBtn");
+  const singleEnv = document.getElementById("singleEnv");
+
+  const goBtn = document.getElementById("goBtn");
+  const hintCompare = document.getElementById("hintCompare");
+  const hintOpen = document.getElementById("hintOpen");
   const statusEl = document.getElementById("status");
 
   function setStatus(msg){ statusEl.textContent = msg || ""; }
 
-  // Track window handles so we can focus/close them later
-  let leftWinHandle = null;
-  let rightWinHandle = null;
+  // === Mode state ===
+  let mode = "compare"; // "compare" | "open"
 
-  function hasOpenWindows(){
-    return (!!leftWinHandle && !leftWinHandle.closed) || (!!rightWinHandle && !rightWinHandle.closed);
+  function setMode(nextMode){
+    mode = nextMode;
+
+    modeCompare.classList.toggle("active", mode === "compare");
+    modeOpen.classList.toggle("active", mode === "open");
+
+    compareUI.classList.toggle("hidden", mode !== "compare");
+    openUI.classList.toggle("hidden", mode !== "open");
+
+    hintCompare.classList.toggle("hidden", mode !== "compare");
+    hintOpen.classList.toggle("hidden", mode !== "open");
+
+    goBtn.textContent = (mode === "compare") ? "Compare" : "Open";
+    setStatus("");
   }
 
-  function updateWindowButtons(){
-    const any = hasOpenWindows();
-    focusBtn.disabled = !any;
-    closeBtn.disabled = !any;
-  }
+  modeCompare.addEventListener("click", () => setMode("compare"));
+  modeOpen.addEventListener("click", () => setMode("open"));
+  modeCompare.addEventListener("keydown", (e)=>{ if(e.key==="Enter") setMode("compare"); });
+  modeOpen.addEventListener("keydown", (e)=>{ if(e.key==="Enter") setMode("open"); });
 
   // Populate env dropdowns
-  Object.keys(envMap).forEach(env=>{
-    leftEnv.add(new Option(env, env));
-    rightEnv.add(new Option(env, env));
-  });
+  function fillSelect(sel){
+    sel.innerHTML = "";
+    Object.keys(envMap).forEach(env => sel.add(new Option(env, env)));
+  }
+  fillSelect(leftEnv);
+  fillSelect(rightEnv);
+  fillSelect(singleEnv);
+
   leftEnv.value = "STAGING";
   rightEnv.value = "PROD";
+  singleEnv.value = "PROD";
 
   function detectPath(inputUrl){
     const url = (inputUrl || "").trim();
@@ -219,20 +247,6 @@
     return envMap[env] + p;
   }
 
-  function currentPathFromQuery(){
-    return new URLSearchParams(location.search).get("path") || null;
-  }
-
-  function updateShareLink(path){
-    const qp = new URLSearchParams();
-    qp.set("path", path);
-    qp.set("left", leftEnv.value);
-    qp.set("right", rightEnv.value);
-    history.replaceState(null, "", "?" + qp.toString());
-  }
-
-  // ✅ Improved: more reliable auto-positioning across multi-monitor setups,
-  // plus a few retries (some browsers only allow move/resize after creation).
   function openSplit(leftUrl, rightUrl){
     const availLeft = (typeof screen.availLeft === "number") ? screen.availLeft : 0;
     const availTop  = (typeof screen.availTop === "number") ? screen.availTop : 0;
@@ -244,7 +258,6 @@
     const common =
       "popup=yes,noopener,noreferrer,toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes";
 
-    // Ask for position in the features too (helps some browsers)
     const leftFeatures  = `${common},width=${half},height=${h},left=${availLeft},top=${availTop}`;
     const rightFeatures = `${common},width=${w-half},height=${h},left=${availLeft+half},top=${availTop}`;
 
@@ -254,168 +267,88 @@
     if(!leftWin || !rightWin){
       setStatus("Pop-ups blocked. Allow pop-ups for this site, then try again.");
       alert("Pop-ups blocked. Allow pop-ups for luisjguedes.github.io, then click Compare again.");
-      updateWindowButtons();
       return false;
     }
 
-    // Save handles so we can focus/close later
-    leftWinHandle = leftWin;
-    rightWinHandle = rightWin;
-
-    // Retry positioning a few times (browser may only allow after creation)
+    // Retry positioning a few times (some browsers only allow after creation)
     const tries = [0, 120, 350, 700];
     tries.forEach((ms) => {
       setTimeout(() => {
-        try {
-          leftWin.moveTo(availLeft, availTop);
-          leftWin.resizeTo(half, h);
-        } catch {}
-
-        try {
-          rightWin.moveTo(availLeft + half, availTop);
-          rightWin.resizeTo(w - half, h);
-        } catch {}
+        try { leftWin.moveTo(availLeft, availTop); leftWin.resizeTo(half, h); } catch {}
+        try { rightWin.moveTo(availLeft + half, availTop); rightWin.resizeTo(w - half, h); } catch {}
       }, ms);
     });
 
-    // Bring to front
-    try { leftWin.focus(); } catch {}
-    try { rightWin.focus(); } catch {}
-
     setStatus("Opened/updated two reusable windows (doc_left + doc_right).");
-    updateWindowButtons();
     return true;
   }
 
-  function openTabs(leftUrl, rightUrl){
-    window.open(leftUrl, "_blank", "noopener,noreferrer");
-    window.open(rightUrl, "_blank", "noopener,noreferrer");
-    setStatus("Opened both environments in tabs.");
+  function openSingle(url){
+    window.open(url, "doc_single", "noopener,noreferrer");
+    setStatus("Opened in the selected environment.");
   }
 
   function getPathOrAlert(){
     const input = urlInput.value.trim();
-    const detected = detectPath(input);
-    const fromQuery = currentPathFromQuery();
-
-    const path = detected || fromQuery;
+    const path = detectPath(input);
 
     if(!path){
-      alert("Paste a URL from PROD/STAGING/UAT first (or open a shared compare link).");
+      alert("Paste a URL from PROD/STAGING/UAT first (or add more bases to envPatterns).");
       return null;
     }
     return path;
   }
 
-  function compare(){
-    const path = getPathOrAlert();
-    if(!path) return;
-
-    const l = buildUrl(leftEnv.value, path);
-    const r = buildUrl(rightEnv.value, path);
-
-    updateShareLink(path);
-    openSplit(l, r);
+  function persist(mode, path){
+    const qp = new URLSearchParams();
+    qp.set("mode", mode);
+    qp.set("path", path);
+    qp.set("left", leftEnv.value);
+    qp.set("right", rightEnv.value);
+    qp.set("env", singleEnv.value);
+    history.replaceState(null, "", "?" + qp.toString());
   }
 
-  compareBtn.addEventListener("click", compare);
-
-  openTabsBtn.addEventListener("click", () => {
+  goBtn.addEventListener("click", () => {
     const path = getPathOrAlert();
     if(!path) return;
-    const l = buildUrl(leftEnv.value, path);
-    const r = buildUrl(rightEnv.value, path);
-    updateShareLink(path);
-    openTabs(l, r);
-  });
 
-  swapBtn.addEventListener("click", () => {
-    const tmp = leftEnv.value;
-    leftEnv.value = rightEnv.value;
-    rightEnv.value = tmp;
-    setStatus("Swapped environments.");
-  });
-
-  copyBtn.addEventListener("click", async () => {
-    const path = getPathOrAlert();
-    if(!path) return;
-    const l = buildUrl(leftEnv.value, path);
-    const r = buildUrl(rightEnv.value, path);
-
-    const text = `LEFT (${leftEnv.value}): ${l}\nRIGHT (${rightEnv.value}): ${r}`;
-    try {
-      await navigator.clipboard.writeText(text);
-      setStatus("Copied both URLs to clipboard.");
-    } catch {
-      setStatus("Could not copy automatically. Your browser may block clipboard access.");
-      alert(text);
+    if(mode === "compare"){
+      persist("compare", path);
+      openSplit(buildUrl(leftEnv.value, path), buildUrl(rightEnv.value, path));
+    } else {
+      persist("open", path);
+      openSingle(buildUrl(singleEnv.value, path));
     }
   });
 
-  copyLinkBtn.addEventListener("click", async () => {
-    const path = getPathOrAlert();
-    if(!path) return;
-    updateShareLink(path);
-    try {
-      await navigator.clipboard.writeText(location.href);
-      setStatus("Copied compare link.");
-    } catch {
-      setStatus("Could not copy automatically. Copy from the address bar.");
-    }
-  });
-
-  // Bring compare windows to the front
-  focusBtn.addEventListener("click", () => {
-    let did = false;
-    if(leftWinHandle && !leftWinHandle.closed){
-      try { leftWinHandle.focus(); did = true; } catch {}
-    }
-    if(rightWinHandle && !rightWinHandle.closed){
-      try { rightWinHandle.focus(); did = true; } catch {}
-    }
-    setStatus(did ? "Brought compare windows to the front." : "No open compare windows found.");
-    updateWindowButtons();
-  });
-
-  // Close compare windows
-  closeBtn.addEventListener("click", () => {
-    let did = false;
-    if(leftWinHandle && !leftWinHandle.closed){
-      try { leftWinHandle.close(); did = true; } catch {}
-    }
-    if(rightWinHandle && !rightWinHandle.closed){
-      try { rightWinHandle.close(); did = true; } catch {}
-    }
-    leftWinHandle = null;
-    rightWinHandle = null;
-    setStatus(did ? "Closed compare windows." : "No open compare windows to close.");
-    updateWindowButtons();
-  });
-
-  // Enter key
   urlInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") compare();
+    if (e.key === "Enter") goBtn.click();
   });
 
-  // Init from query params (shared links)
+  // Init from query params
   (function initFromQuery(){
     const qp = new URLSearchParams(location.search);
+    const m = qp.get("mode");
     const path = qp.get("path");
-    const left = qp.get("left");
-    const right = qp.get("right");
+    const l = qp.get("left");
+    const r = qp.get("right");
+    const env = qp.get("env");
 
-    if(left && envMap[left]) leftEnv.value = left;
-    if(right && envMap[right]) rightEnv.value = right;
+    if(l && envMap[l]) leftEnv.value = l;
+    if(r && envMap[r]) rightEnv.value = r;
+    if(env && envMap[env]) singleEnv.value = env;
+
+    if(m === "open") setMode("open");
+    else setMode("compare");
 
     if(path){
-      urlInput.value = buildUrl(rightEnv.value, path);
-      setStatus("Loaded from shared link. Click Compare to open side-by-side.");
+      // Put a representative URL into the input so it feels "loaded"
+      const exampleEnv = (m === "open") ? (singleEnv.value || "PROD") : (rightEnv.value || "PROD");
+      urlInput.value = buildUrl(exampleEnv, path);
+      setStatus("Ready. Click Go.");
     }
-    updateWindowButtons();
   })();
-
-  // Keep buttons fresh if user closes windows manually
-  setInterval(updateWindowButtons, 1200);
 </script>
 </body>
 </html>
