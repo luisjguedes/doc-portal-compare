@@ -220,6 +220,18 @@
     UAT:"https://reltio-preview.portal.heretto.com/en"
   };
 
+  /* === CHANGE #1 (NEW): allow multiple admissible base URLs per environment === */
+  /* This is what makes https://docstaging.reltio.com/en work as STAGING input. */
+  const envPatterns = {
+    PROD: ["https://docs.reltio.com/en"],
+    STAGING: [
+      "https://reltio-staging.portal.heretto.com/en",
+      "https://docstaging.reltio.com/en" /* <-- CHANGE #1a: added this alias */
+    ],
+    UAT: ["https://reltio-preview.portal.heretto.com/en"]
+  };
+  /* === END CHANGE #1 === */
+
   const modeCheck=document.getElementById("modeCheck");
   const modeCompare=document.getElementById("modeCompare");
   const checkUI=document.getElementById("checkUI");
@@ -252,11 +264,18 @@
   modeCheck.onclick=()=>setMode("check");
   modeCompare.onclick=()=>setMode("compare");
 
+  /* === CHANGE #2 (UPDATED): detectPath now matches against envPatterns, not envMap === */
+  /* This preserves everything else, but lets extra aliases be recognized as valid input. */
   function detectPath(u){
-    for(const base of Object.values(envMap))
-      if(u.startsWith(base)) return u.slice(base.length)||"/";
+    const trimmed = (u || "").trim();
+    for (const bases of Object.values(envPatterns)) {
+      for (const base of bases) {
+        if (trimmed.startsWith(base)) return trimmed.slice(base.length) || "/";
+      }
+    }
     return null;
   }
+  /* === END CHANGE #2 === */
 
   function popup(url,name,left){
     const w=Math.floor(screen.availWidth/2);
