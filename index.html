@@ -220,17 +220,15 @@
     UAT:"https://reltio-preview.portal.heretto.com/en"
   };
 
-  /* === CHANGE #1 (NEW): allow multiple admissible base URLs per environment === */
-  /* This is what makes https://docstaging.reltio.com/en work as STAGING input. */
+  /* allow multiple admissible base URLs per environment */
   const envPatterns = {
     PROD: ["https://docs.reltio.com/en"],
     STAGING: [
       "https://reltio-staging.portal.heretto.com/en",
-      "https://docstaging.reltio.com/en" /* <-- CHANGE #1a: added this alias */
+      "https://docstaging.reltio.com/en"
     ],
     UAT: ["https://reltio-preview.portal.heretto.com/en"]
   };
-  /* === END CHANGE #1 === */
 
   const modeCheck=document.getElementById("modeCheck");
   const modeCompare=document.getElementById("modeCompare");
@@ -264,8 +262,7 @@
   modeCheck.onclick=()=>setMode("check");
   modeCompare.onclick=()=>setMode("compare");
 
-  /* === CHANGE #2 (UPDATED): detectPath now matches against envPatterns, not envMap === */
-  /* This preserves everything else, but lets extra aliases be recognized as valid input. */
+  /* detectPath matches against envPatterns, not envMap */
   function detectPath(u){
     const trimmed = (u || "").trim();
     for (const bases of Object.values(envPatterns)) {
@@ -275,26 +272,54 @@
     }
     return null;
   }
-  /* === END CHANGE #2 === */
 
-  function popup(url,name,left){
-    const w=Math.floor(screen.availWidth/2);
-    const h=Math.floor(screen.availHeight*0.9);
-    window.open(
-      url,
-      name,
-      `popup=yes,resizable=yes,scrollbars=yes,width=${w},height=${h},left=${left},top=0`
-    );
+  /* ===== POPUP LOGIC (more consistent side-by-side) ===== */
+  function openAndDock(url, name, x, y, w, h){
+    // Open/reuse with minimal features; then move/resize reliably
+    const win = window.open(url, name, "popup=yes,resizable=yes,scrollbars=yes");
+    if (!win) {
+      alert("Pop-ups blocked. Please allow pop-ups for this site/file.");
+      return null;
+    }
+
+    // Improve reliability across browsers by applying size/position after a tick
+    setTimeout(() => {
+      try {
+        win.focus();
+        win.moveTo(x, y);
+        win.resizeTo(w, h);
+      } catch (e) {
+        // moveTo/resizeTo may be restricted; keep focus at least
+        try { win.focus(); } catch(_) {}
+      }
+    }, 60);
+
+    return win;
   }
 
   document.getElementById("goBtn").onclick=()=>{
     const path=detectPath(urlInput.value.trim());
     if(!path){alert("Paste a valid docs URL");return;}
+
+    // Prefer docking relative to where this launcher window is (better for multi-monitor setups)
+    const baseX = (window.screenX ?? window.screenLeft ?? 0);
+    const baseY = (window.screenY ?? window.screenTop ?? 0);
+
+    const availW = (window.screen.availWidth || screen.width);
+    const availH = (window.screen.availHeight || screen.height);
+
+    const w = Math.floor(availW / 2);
+    const h = Math.floor(availH * 0.95);
+    const top = baseY; // keep aligned with current window
+
     if(mode==="check"){
-      popup(envMap[checkEnv.value]+path,"doc_left",0);
+      openAndDock(envMap[checkEnv.value]+path,"doc_left",baseX,top,w,h);
     }else{
-      popup(envMap[leftEnv.value]+path,"doc_left",0);
-      popup(envMap[rightEnv.value]+path,"doc_right",Math.floor(screen.availWidth/2));
+      const leftUrl  = envMap[leftEnv.value]+path;
+      const rightUrl = envMap[rightEnv.value]+path;
+
+      openAndDock(leftUrl,"doc_left",baseX,top,w,h);
+      openAndDock(rightUrl,"doc_right",baseX + w,top,w,h);
     }
   };
 </script>
